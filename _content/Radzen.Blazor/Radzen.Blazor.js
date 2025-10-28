@@ -366,7 +366,7 @@ window.Radzen = {
               var value = e.clipboardData.getData('text');
 
               if (value) {
-                  for (var i = 0; i < value.length; i++) {
+                  for (var i = 0; i < Math.min(value.length, Radzen[id].inputs.length); i++) {
                       if (isNumber && isNaN(+value[i])) {
                           continue;
                       }
@@ -2615,5 +2615,41 @@ window.Radzen = {
           wcagTheme.href = wcagHref;
         }
       }
+    },
+    createDraggable: function(element, ref, onDragStart) {
+      function handleDragStart(e) {
+        e.dataTransfer.setData('', e.target.id);
+        ref.invokeMethodAsync(onDragStart);
+      }
+      element.draggable = true;
+      element.addEventListener('dragstart', handleDragStart);
+      return {
+        dispose() {
+          element.removeEventListener('dragstart', handleDragStart);
+        }
+      };
     }
+};
+
+Radzen.registerFabMenu = function(element, dotnet){
+  if(!element) return;
+  if(element.__rzOutsideClickHandler){
+    document.removeEventListener('click', element.__rzOutsideClickHandler);
+    delete element.__rzOutsideClickHandler;
+  }
+  const handler = function(e){
+    if(!element.contains(e.target)){
+      dotnet.invokeMethodAsync('CloseAsync');
+    }
+  };
+  element.__rzOutsideClickHandler = handler;
+  document.addEventListener('click', handler);
+};
+Radzen.unregisterFabMenu = function(element){
+  if(!element) return;
+  const handler = element.__rzOutsideClickHandler;
+  if(handler){
+    document.removeEventListener('click', handler);
+    delete element.__rzOutsideClickHandler;
+  }
 };
